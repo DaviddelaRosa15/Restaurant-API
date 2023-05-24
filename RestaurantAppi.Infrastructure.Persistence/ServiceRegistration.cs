@@ -19,10 +19,10 @@ namespace RestaurantAppi.Infrastructure.Persistence
         public static void AddPersistenceInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
 			var connection = configuration.GetConnectionString("PostgreSQL");
-            //var password = Environment.GetEnvironmentVariable("PassCockroachDB");
-            //var host = Environment.GetEnvironmentVariable("HostCockroachDB");
-			//connection = connection.Replace("#", "YDkwvTf3PyHcvp2K9haiWQ");
-			//connection = connection.Replace("ServerHost", "sample-project-3889.g8z.cockroachlabs.cloud");
+            var password = Environment.GetEnvironmentVariable("PassCockroachDB");
+            var host = Environment.GetEnvironmentVariable("HostCockroachDB");
+			connection = connection.Replace("#", password);
+			connection = connection.Replace("ServerHost", host);
 			#region Contexts
 			if (configuration.GetValue<bool>("UseInMemoryDatabase"))
             {
