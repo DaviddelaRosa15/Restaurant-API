@@ -18,11 +18,11 @@ namespace RestaurantAppi.Infrastructure.Persistence
     {
         public static void AddPersistenceInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-			var connection = configuration.GetConnectionString("PostgreSQL");
-            var password = Environment.GetEnvironmentVariable("PassCockroachDB");
-            var host = Environment.GetEnvironmentVariable("HostCockroachDB");
-			connection = connection.Replace("#", password);
-			connection = connection.Replace("ServerHost", host);
+			//var connection = configuration.GetConnectionString("PostgreSQL");
+            //var password = Environment.GetEnvironmentVariable("PassCockroachDB");
+            //var host = Environment.GetEnvironmentVariable("HostCockroachDB");
+			//connection = connection.Replace("#", password);
+			//connection = connection.Replace("ServerHost", host);
 			#region Contexts
 			if (configuration.GetValue<bool>("UseInMemoryDatabase"))
             {
@@ -33,7 +33,7 @@ namespace RestaurantAppi.Infrastructure.Persistence
                 services.AddDbContext<ApplicationContext>(options =>
                 {
                     options.EnableSensitiveDataLogging();
-                    options.UseNpgsql(connection,
+                    options.UseNpgsql("Host=sample-project-3889.g8z.cockroachlabs.cloud;Port=26257;Database=defaultdb;User ID=DavidDevs;Password=YDkwvTf3PyHcvp2K9haiWQ;sslmode=Require;Trust Server Certificate=true",
                     m => m.MigrationsAssembly(typeof(ApplicationContext).Assembly.FullName));
                 });
             }
