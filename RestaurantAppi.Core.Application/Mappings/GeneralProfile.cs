@@ -41,10 +41,16 @@ namespace RestaurantAppi.Core.Application.Mappings
                 .ForMember(x => x.HasError, opt => opt.Ignore())
                 .ForMember(x => x.Error, opt => opt.Ignore())
                 .ReverseMap();
-            #endregion
 
-            #region Application
-            CreateMap<Dish_Ingredient, Dish_IngredientViewModel>()
+			CreateMap<Domain.Entities.RefreshToken, Dtos.Account.RefreshToken>()
+                .ReverseMap()
+				.ForMember(x => x.CreatedBy, opt => opt.Ignore())
+				.ForMember(x => x.LastModified, opt => opt.Ignore())
+				.ForMember(x => x.LastModifiedBy, opt => opt.Ignore());
+			#endregion
+
+			#region Application
+			CreateMap<Dish_Ingredient, Dish_IngredientViewModel>()
                 .ReverseMap()
                 .ForMember(x => x.Created, opt => opt.Ignore())
                 .ForMember(x => x.CreatedBy, opt => opt.Ignore())

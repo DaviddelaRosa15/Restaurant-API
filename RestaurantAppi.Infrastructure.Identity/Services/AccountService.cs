@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 using RestaurantAppi.Core.Application.DTOs.Email;
+using RestaurantAppi.Core.Application.ViewModels.User;
 
 namespace RestaurantAppi.Infrastructure.Identity.Services
 {
@@ -24,18 +25,21 @@ namespace RestaurantAppi.Infrastructure.Identity.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailService _emailService;
+        private readonly IRefreshTokenService _tokenService;
         private readonly JWTSettings _jwtSettings;
 
         public AccountService(
               UserManager<ApplicationUser> userManager,
               SignInManager<ApplicationUser> signInManager,
               IEmailService emailService,
+              IRefreshTokenService tokenService,
               IOptions<JWTSettings> jwtSettings
             )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailService = emailService;
+            _tokenService = tokenService;
             _jwtSettings = jwtSettings.Value;
         }
 
@@ -65,7 +69,7 @@ namespace RestaurantAppi.Infrastructure.Identity.Services
                 return response;
             }
 
-            JwtSecurityToken jwtSecurityToken = await GenerateJWToken(user);
+            JwtSecurityToken jwtSecurityToken = await GenerateJWToken(user.Id);
 
             response.Id = user.Id;
             response.Email = user.Email;
@@ -76,7 +80,8 @@ namespace RestaurantAppi.Infrastructure.Identity.Services
             response.Roles = rolesList.ToList();
             response.IsVerified = user.EmailConfirmed;
             response.JWToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
-            var refreshToken = GenerateRefreshToken();
+            var refreshToken = GenerateRefreshToken(user.Id);
+            await _tokenService.Add(refreshToken);
             response.RefreshToken = refreshToken.Token;
 
             return response;
@@ -181,52 +186,61 @@ namespace RestaurantAppi.Infrastructure.Identity.Services
             return response;
         }
 
-        #region PrivateMethods
+		public async Task<JwtSecurityToken> GenerateJWToken(string userId)
+		{
+			var user = await GetUserByIdAsync(userId);
 
-        private async Task<JwtSecurityToken> GenerateJWToken(ApplicationUser user)
-        {
-            var userClaims = await _userManager.GetClaimsAsync(user);
-            var roles = await _userManager.GetRolesAsync(user);
+			var userClaims = await _userManager.GetClaimsAsync(user);
+			var roles = await _userManager.GetRolesAsync(user);
 
-            var roleClaims = new List<Claim>();
+			var roleClaims = new List<Claim>();
 
-            foreach (var role in roles)
-            {
-                roleClaims.Add(new Claim("roles", role));
-            }
+			foreach (var role in roles)
+			{
+				roleClaims.Add(new Claim("roles", role));
+			}
 
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub,user.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Email,user.Email),
-                new Claim("uid", user.Id)
-            }
-            .Union(userClaims)
-            .Union(roleClaims);
+			var claims = new[]
+			{
+				new Claim(JwtRegisteredClaimNames.Sub,user.UserName),
+				new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+				new Claim(JwtRegisteredClaimNames.Email,user.Email),
+				new Claim("uid", user.Id)
+			}
+			.Union(userClaims)
+			.Union(roleClaims);
 
-            var symmectricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-            var signingCredetials = new SigningCredentials(symmectricSecurityKey, SecurityAlgorithms.HmacSha256);
+			var symmectricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+			var signingCredetials = new SigningCredentials(symmectricSecurityKey, SecurityAlgorithms.HmacSha256);
 
-            var jwtSecurityToken = new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.DurationInMinutes),
-                signingCredentials: signingCredetials);
+			var jwtSecurityToken = new JwtSecurityToken(
+				issuer: _jwtSettings.Issuer,
+				audience: _jwtSettings.Audience,
+				claims: claims,
+				expires: DateTime.UtcNow.AddMinutes(_jwtSettings.DurationInMinutes),
+				signingCredentials: signingCredetials);
 
-            return jwtSecurityToken;
-        }
+			return jwtSecurityToken;
+		}
 
-        private RefreshToken GenerateRefreshToken()
-        {
-            return new RefreshToken
-            {
-                Token = RandomTokenString(),
-                Expires = DateTime.UtcNow.AddDays(7),
-                Created = DateTime.UtcNow
-            };
-        }
+		public RefreshToken GenerateRefreshToken(string userId)
+		{
+			return new RefreshToken
+			{
+				Token = RandomTokenString(),
+				UserId = userId,
+				Expires = DateTime.UtcNow.AddDays(7)
+			};
+		}
+
+		#region PrivateMethods
+
+		private async Task<ApplicationUser> GetUserByIdAsync(string id)
+		{
+			var user = await _userManager.FindByIdAsync(id);
+
+            return user;
+		}
 
         private string RandomTokenString()
         {

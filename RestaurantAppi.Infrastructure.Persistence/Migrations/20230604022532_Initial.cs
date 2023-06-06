@@ -62,6 +62,27 @@ namespace RestaurantAppi.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Refresh_Tokens",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    Token = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<string>(type: "text", nullable: true),
+                    Expires = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Revoked = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReplacedByToken = table.Column<string>(type: "text", nullable: true),
+                    CreatedBy = table.Column<string>(type: "text", nullable: true),
+                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastModifiedBy = table.Column<string>(type: "text", nullable: true),
+                    LastModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Refresh_Tokens", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Table_Statuses",
                 columns: table => new
                 {
@@ -268,6 +289,9 @@ namespace RestaurantAppi.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "Order_Dishes");
+
+            migrationBuilder.DropTable(
+                name: "Refresh_Tokens");
 
             migrationBuilder.DropTable(
                 name: "Ingredients");

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RestaurantAppi.Core.Application.Interfaces.Services;
 using System.Reflection;
+using MediatR;
 
 namespace RestaurantAppi.Core.Application
 {
@@ -13,6 +14,7 @@ namespace RestaurantAppi.Core.Application
         public static void AddApplicationLayer(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            services.AddMediatR(Assembly.GetExecutingAssembly());
             #region Services
             services.AddTransient(typeof(IGenericService<,,>), typeof(GenericService<,,>));
             services.AddTransient<IUserService, UserService>();
@@ -25,6 +27,7 @@ namespace RestaurantAppi.Core.Application
             services.AddTransient<IOrder_DishService, Order_DishService>();
             services.AddTransient<ITableStatusService, TableStatusService>();
             services.AddTransient<IOrderStatusService, OrderStatusService>();
+            services.AddTransient<IRefreshTokenService, RefreshTokenService>();
             #endregion
             
         }

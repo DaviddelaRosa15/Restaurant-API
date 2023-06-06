@@ -23,8 +23,9 @@ namespace RestaurantAppi.Infrastructure.Persistence.Contexts
         public DbSet<OrderStatus> OrderStatuses { get; set; }
         public DbSet<Dish_Ingredient> Dish_Ingredients { get; set; }
         public DbSet<Order_Dish> Order_Dishes { get; set; }
+		public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
+		public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             foreach (var entry in ChangeTracker.Entries<AuditableBaseEntity>())
             {
@@ -78,10 +79,13 @@ namespace RestaurantAppi.Infrastructure.Persistence.Contexts
 
             modelBuilder.Entity<Order_Dish>()
                 .ToTable("Order_Dishes");
-            #endregion
 
-            #region Primary keys
-            modelBuilder.Entity<Ingredient>()
+			modelBuilder.Entity<RefreshToken>()
+				.ToTable("Refresh_Tokens");
+			#endregion
+
+			#region Primary keys
+			modelBuilder.Entity<Ingredient>()
                 .HasKey(x => x.Id);
 
             modelBuilder.Entity<Dish>()
@@ -107,11 +111,14 @@ namespace RestaurantAppi.Infrastructure.Persistence.Contexts
 
             modelBuilder.Entity<Order_Dish>()
                 .HasKey(x => x.Id);
-            #endregion
 
-            #region Relationships
+			modelBuilder.Entity<RefreshToken>()
+				.HasKey(x => x.Id);
+			#endregion
 
-            modelBuilder.Entity<Dish>()
+			#region Relationships
+
+			modelBuilder.Entity<Dish>()
                 .HasOne<DishCategory>(x => x.Category)
                 .WithMany(x => x.Dishes)
                 .HasForeignKey(x => x.CategoryId)

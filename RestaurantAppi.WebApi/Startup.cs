@@ -13,6 +13,7 @@ using RestaurantAppi.Infrastructure.Identity;
 using RestaurantAppi.Infrastructure.Persistence;
 using RestaurantAppi.Infrastructure.Shared;
 using RestaurantAppi.WebApi.Extensions;
+using RestaurantAppi.WebApi.Middlewares;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +42,12 @@ namespace RestaurantAppi.WebApi
             services.AddSwaggerExtension();
             services.AddApiVersioningExtension();
             services.AddDistributedMemoryCache();
-            services.AddSession();
+            services.AddSession(options =>
+			{
+				options.IdleTimeout = TimeSpan.FromMinutes(1);
+				options.Cookie.HttpOnly = true;
+				options.Cookie.IsEssential = true;
+			});
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
@@ -68,6 +74,7 @@ namespace RestaurantAppi.WebApi
             app.UseSwaggerExtension();
             app.UseHealthChecks("/health");
             app.UseSession();
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

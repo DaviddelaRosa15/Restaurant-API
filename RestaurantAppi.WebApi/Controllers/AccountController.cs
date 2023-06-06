@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantAppi.Core.Application.Dtos.Account;
 using RestaurantAppi.Core.Application.Interfaces.Services;
+using System.Web;
 using System.Threading.Tasks;
+using System;
 
 namespace RestaurantAppi.WebApi.Controllers
 {
@@ -21,7 +23,18 @@ namespace RestaurantAppi.WebApi.Controllers
         [HttpPost("authenticate")]
         public async Task<IActionResult> AuthenticateAsync(AuthenticationRequest request)
         {
-            return Ok(await _accountService.AuthenticateAsync(request));
+            var response = await _accountService.AuthenticateAsync(request);
+            var refreshToken = response.RefreshToken;
+			var cookieOptions = new CookieOptions
+			{
+				HttpOnly = true,
+                Secure = true,
+                Expires = DateTime.UtcNow.AddDays(14),
+				SameSite = SameSiteMode.None
+			};
+            Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+
+			return Ok(response);
         }
 
         [Authorize(Roles = "Administrator")]
